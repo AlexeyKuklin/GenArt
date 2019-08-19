@@ -21,14 +21,15 @@ def get_edges():
         edges.append((i, 0))
     return edges
 
-def fitness_function(imt, img):
+def fitness_function(imt, img, mask):
     pt = list(imt.getdata())
     pg = list(img.getdata())
+    pm = list(mask.getdata())
 
     fitness = 0
-    for t, g in zip(pt, pg):
+    for t, g, m in zip(pt, pg, pm):
         #fitness = fitness + abs(t[0] - g[0]) + abs(t[1] - g[1]) + abs(t[2] - g[2])
-        fitness = fitness + abs(t - g)
+        fitness = fitness + m*abs(t - g)
     return fitness
 
 def open_original_image(file_name):
@@ -36,6 +37,17 @@ def open_original_image(file_name):
     im = ImageOps.fit(image=im, size=(IMG_SIZE, IMG_SIZE), method=0, bleed=0.0, centering=(0.5, 0.5))
     im = ImageOps.grayscale(image=im)
     im.save(file_name+'_original.png')
+    return im
+
+def open_mask(file_name):
+    im = Image.open(file_name)
+    im = ImageOps.grayscale(image=im)
+    pd = im.load()
+    for i in range(im.size[0]): # for every pixel:
+        for j in range(im.size[1]):
+            if pd[i, j] == 0:
+                pd[i, j] = 128
+    im.save(file_name+'_mask.png')
     return im
 
 def draw_genome(edges, genome):
@@ -46,28 +58,26 @@ def draw_genome(edges, genome):
     return im
 
 def process(n_steps, edges, genome):
-    imt = open_original_image(file_name="1.jpg")
+    imt = open_original_image(file_name='Girl with a Pearl Earring.jpg')
+    mask = open_mask(file_name='mask.png')
+
     img = draw_genome(edges, genome)
-    min_fitness = fitness_function(imt, img)
+    min_fitness = fitness_function(imt, img, mask)
     print('min_fitness =', min_fitness)
 
-    cnt = 0
     for i in range(n_steps):
         new_genome = list(genome)
         new_genome[random.randint(0, len(genome)-1)] = random.randint(0, len(edges)-1)
         img = draw_genome(edges, new_genome)
 
-        fitness = fitness_function(imt, img)
+        fitness = fitness_function(imt, img, mask)
         if fitness < min_fitness:
             min_fitness = fitness
             genome = new_genome
             print(i, '=', fitness)
-            if cnt % 10 == 0:
-                img.save("gen/"+str(i)+'_'+str(fitness)+'.png')
-                save_to_file("gen/"+str(i)+'_'+str(fitness)+'.gen', genome)
+            img.save("gen/"+str(i)+'_'+str(fitness)+'.png')
+            save_to_file("gen/"+str(i)+'_'+str(fitness)+'.gen', genome)
 
-    img.save("gen/"+str(n_steps)+'_'+str(fitness)+'.png')
-    save_to_file("gen/"+str(n_steps)+'_'+str(fitness)+'.gen', genome)
 
 def main(genome_file_name):
     edges = get_edges()
@@ -75,7 +85,10 @@ def main(genome_file_name):
         genome = load_from_file(genome_file_name)
     else:
         genome = [random.randint(0, len(edges)-1) for i in range(1000)]
-    process(100000, edges, genome)
+    process(1000000, edges, genome)
 
 if __name__ == "__main__":
-    main(None)
+    #main(None)
+    main('99904_2441304707.gen')
+
+
