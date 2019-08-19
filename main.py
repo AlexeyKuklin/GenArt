@@ -57,7 +57,11 @@ def process(n_steps, edges, genome, imt, mask):
     pt = list(imt.getdata())    
     pm = list(mask.getdata())
 
-    min_fitness = 10**100
+    img = draw_genome(edges, genome)
+    pg = list(img.getdata())
+    min_fitness = fitness_function(pt, pg, pm)
+    print("min_fitness =", min_fitness)
+        
     for i in range(n_steps):
         new_genome = list(genome)
         new_genome[random.randint(0, len(genome)-1)] = random.randint(0, len(edges)-1)
