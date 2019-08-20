@@ -23,9 +23,14 @@ def get_edges():
 
 def fitness_function(pt, pg, pm):
     fitness = 0
-    for t, g, m in zip(pt, pg, pm):
-        #fitness = fitness + abs(t[0] - g[0]) + abs(t[1] - g[1]) + abs(t[2] - g[2])
-        fitness = fitness + m*abs(t - g)
+    #fitness = fitness + abs(t[0] - g[0]) + abs(t[1] - g[1]) + abs(t[2] - g[2])
+    if pm:
+        for t, g, m in zip(pt, pg, pm):
+            fitness = fitness + m*abs(t - g)
+    else:
+        for t, g in zip(pt, pg):
+            fitness = fitness + abs(t - g)
+
     return fitness
 
 def open_original_image(file_name):
@@ -55,7 +60,9 @@ def draw_genome(edges, genome):
 
 def process(n_steps, edges, genome, imt, mask):
     pt = list(imt.getdata())    
-    pm = list(mask.getdata())
+    pm = None
+    if mask:
+        pm = list(mask.getdata())
 
     img = draw_genome(edges, genome)
     pg = list(img.getdata())
@@ -77,20 +84,23 @@ def process(n_steps, edges, genome, imt, mask):
             save_to_file("gen/"+str(i)+'_'+str(fitness)+'.gen', genome)
 
 
-def main(genome_file_name):
-    edges = get_edges()
+def main(n_steps, original_file_name, genome_file_name=None, genome_size=None, mask_file_name=None):
+    imt = open_original_image(file_name=original_file_name)
     if genome_file_name:
         genome = load_from_file(genome_file_name)
     else:
-        genome = [random.randint(0, len(edges)-1) for i in range(1000)]
-        
-    imt = open_original_image(file_name='Girl with a Pearl Earring.jpg')
-    mask = open_mask(file_name='mask.png')
+        if genome_size > 0:
+            genome = [random.randint(0, len(edges)-1) for i in range(genome_size)]      
+        else:
+            raise ValueError('genome size is not defined')
 
-    process(1000000, edges, genome, imt, mask)
+    mask = None
+    if mask_file_name:
+        mask = open_mask(file_name=mask_file_name)
+
+    edges = get_edges()
+    process(n_steps, edges, genome, imt, mask)
 
 if __name__ == "__main__":
-    #main('99904_2441304707.gen')
-    main(None)
-
+    main(1000000, 'Girl with a Pearl Earring.jpg')
 
