@@ -37,8 +37,8 @@ def draw_genome(edges, genome, size):
     im = Image.new(mode='RGB', size=size, color=(255, 255, 255))
     d = ImageDraw.Draw(im)
     for i in range(len(genome)-2):
-        d.line(xy=(edges[genome[i][0]], edges[genome[i+1][0]]), fill=(0, 0, 0), width=1)
-        #d.line(xy=(edges[genome[i][1]], edges[genome[i+1][1]]), fill=(255, 255, 255, 50), width=1)
+        d.line(xy=(edges[genome[i][0]], edges[genome[i+1][0]]), fill=(0, 0, 0, 0), width=1)
+        d.line(xy=(edges[genome[i][1]], edges[genome[i+1][1]]), fill=(230, 230, 230, 0), width=1)
     im = im.convert('YCbCr') ###
     return im
 
@@ -57,6 +57,7 @@ def process(n_steps, edges, genome, imt, mask):
         n = random.randint(0, len(genome)-1)
         ev_old = genome[n][0]
         genome[n][0] = random.randint(0, len(edges)-1)
+        #genome[n][1] = random.randint(0, len(edges)-1)
 
         img = draw_genome(edges, genome, imt.size)
         pg = list(img.getdata())
@@ -69,6 +70,8 @@ def process(n_steps, edges, genome, imt, mask):
             save_to_file("gen/"+str(i)+'_'+str(fitness)+'.gen', genome)
         else:
             genome[n][0] = ev_old
+            #genome[n][1] = ev_old
+
 
 def main(imt, edges, n_steps, genome_file_name=None, genome_size=None, mask_file_name=None):
     if genome_file_name:
@@ -109,4 +112,4 @@ if __name__ == "__main__":
         edges.append((i, 512))
         edges.append((i, 0))
  
-    main(im, edges, 2000000, genome_size=1000)
+    main(im, edges, 2000000, genome_file_name='4551_22882864.gen', genome_size=1000)
