@@ -17,7 +17,7 @@ def fitness_function(pt, pg, pm):
             fitness = fitness + m*abs(t - g)
     else:
         for t, g in zip(pt, pg):
-            fitness = fitness + abs(t - g)
+            fitness = fitness + abs(t[0] - g[0])
             #fitness = fitness + abs(t[0] - g[0]) + abs(t[1] - g[1]) + abs(t[2] - g[2])
 
     return fitness
@@ -39,7 +39,7 @@ def draw_genome(edges, genome, size):
     for i in range(len(genome)-2):
         d.line(xy=(edges[genome[i][0]], edges[genome[i+1][0]]), fill=(0, 0, 0), width=1)
         #d.line(xy=(edges[genome[i][1]], edges[genome[i+1][1]]), fill=(255, 255, 255, 50), width=1)
-    im = ImageOps.grayscale(image=im) ###
+    im = im.convert('YCbCr') ###
     return im
 
 def process(n_steps, edges, genome, imt, mask):
@@ -65,7 +65,7 @@ def process(n_steps, edges, genome, imt, mask):
         if fitness < min_fitness:
             min_fitness = fitness
             print(i, '=', fitness)
-            img.save("gen/"+str(i)+'_'+str(fitness)+'.png')
+            img.convert('RGB').save("gen/"+str(i)+'_'+str(fitness)+'.png')
             save_to_file("gen/"+str(i)+'_'+str(fitness)+'.gen', genome)
         else:
             genome[n][0] = ev_old
@@ -91,16 +91,16 @@ def main(imt, edges, n_steps, genome_file_name=None, genome_size=None, mask_file
 if __name__ == "__main__":
     file_name = 'Girl with a Pearl Earring.jpg'
     im = Image.open(file_name)
-    im = ImageOps.grayscale(image=im)
+    #im = ImageOps.grayscale(image=im)
     rgbimg = Image.new("RGB", im.size)
     rgbimg.paste(im)
     im = rgbimg
     area = (700, 500, 700+3100, 500+3100)
     size = (512, 512)
 
-    im = ImageOps.grayscale(image=im) ###
     im = im.crop(area).resize(size, Image.LANCZOS)
     im.save(file_name+'_original.png')
+    im.convert('YCbCr') ###
 
     edges = []
     for i in range(16, 512, 16):
