@@ -17,8 +17,8 @@ def fitness_function(pt, pg, pm):
             fitness = fitness + m*abs(t - g)
     else:
         for t, g in zip(pt, pg):
-            fitness = fitness + abs(t[0] - g[0])
-            #fitness = fitness + abs(t[0] - g[0]) + abs(t[1] - g[1]) + abs(t[2] - g[2])
+            #fitness = fitness + abs(t[0] - g[0])
+            fitness = fitness + 0.6*abs(t[0] - g[0]) + 0.4*(abs(t[1] - g[1]) + abs(t[2] - g[2]))
 
     return fitness
 
@@ -34,33 +34,52 @@ def open_mask(file_name):
     return im
 
 def draw_genome(edges, genome, size):
-    im = Image.new(mode='RGB', size=size, color=(255, 255, 255))
+    im = Image.new(mode='RGB', size=size, color=(0, 0, 0))
     d = ImageDraw.Draw(im)
     for i in range(len(genome)-2):
-        d.line(xy=(edges[genome[i][0]], edges[genome[i+1][0]]), fill=(0, 0, 0, 0), width=1)
-        d.line(xy=(edges[genome[i][1]], edges[genome[i+1][1]]), fill=(230, 230, 230, 0), width=1)
+        d.line(xy=(edges[genome[i][0]], edges[genome[i+1][0]]), fill=(0, 0, 0), width=1)   #black
+        d.line(xy=(edges[genome[i][1]], edges[genome[i+1][1]]), fill=(245, 245, 245), width=1)  #white
+        d.line(xy=(edges[genome[i][2]], edges[genome[i+1][2]]), fill=(26, 82, 230), width=1) #Blue
+        d.line(xy=(edges[genome[i][3]], edges[genome[i+1][3]]), fill=(255, 74, 74), width=1) #Red
+        d.line(xy=(edges[genome[i][4]], edges[genome[i+1][4]]), fill=(255, 255, 108), width=1) #Yellow
     im = im.convert('YCbCr') ###
     return im
 
 def process(n_steps, edges, genome, imt, mask):
-    pt = list(imt.getdata())    
+    CR = (70, 140, 70+300, 140+300) #(88, 155, 88+256, 155+256) #(70, 140, 70+300, 140+300) #(50, 100, 50+350, 100+350)
+    #imtR = imt.resize(size=(32, 32), resample=Image.LANCZOS)
+    imtR = imt.crop(CR).resize(size=(32, 32), resample=Image.LANCZOS)
+    pt = list(imtR.getdata())    
+
     pm = None
     if mask:
         pm = list(mask.getdata())
 
     img = draw_genome(edges, genome, imt.size)
-    pg = list(img.getdata())
+    #imgR = img.resize(size=(32, 32), resample=Image.LANCZOS)
+    imgR = img.crop(CR).resize(size=(32, 32), resample=Image.LANCZOS)
+    pg = list(imgR.getdata())
     min_fitness = fitness_function(pt, pg, pm)
     print("min_fitness =", min_fitness)
         
     for i in range(n_steps):
         n = random.randint(0, len(genome)-1)
-        ev_old = genome[n][0]
-        genome[n][0] = random.randint(0, len(edges)-1)
-        #genome[n][1] = random.randint(0, len(edges)-1)
+        ev_old = genome[n]
+        
+        genome[n] = [random.randint(0, len(edges)-1),
+                     random.randint(0, len(edges)-1),
+                     random.randint(0, len(edges)-1),
+                     random.randint(0, len(edges)-1),
+                     random.randint(0, len(edges)-1),
+                    ]
+        
+        #genome[n][random.randint(0, 4)] = random.randint(0, len(edges)-1)
+        #genome[n][3] = random.randint(0, len(edges)-1)
 
         img = draw_genome(edges, genome, imt.size)
-        pg = list(img.getdata())
+        #imgR = img.resize(size=(32, 32), resample=Image.LANCZOS)
+        imgR = img.crop(CR).resize(size=(32, 32), resample=Image.LANCZOS)
+        pg = list(imgR.getdata())
 
         fitness = fitness_function(pt, pg, pm)
         if fitness < min_fitness:
@@ -69,8 +88,8 @@ def process(n_steps, edges, genome, imt, mask):
             img.convert('RGB').save("gen/"+str(i)+'_'+str(fitness)+'.png')
             save_to_file("gen/"+str(i)+'_'+str(fitness)+'.gen', genome)
         else:
-            genome[n][0] = ev_old
-            #genome[n][1] = ev_old
+            genome[n] = ev_old
+            #print(i, 'bad=', fitness)
 
 
 def main(imt, edges, n_steps, genome_file_name=None, genome_size=None, mask_file_name=None):
@@ -79,9 +98,11 @@ def main(imt, edges, n_steps, genome_file_name=None, genome_size=None, mask_file
     else:
         if genome_size and genome_size > 0:
             genome = [[random.randint(0, len(edges)-1), 
-                       random.randint(0, len(edges)-1)
+                       random.randint(0, len(edges)-1),
+                       random.randint(0, len(edges)-1),
+                       random.randint(0, len(edges)-1),
+                       random.randint(0, len(edges)-1),
                      ] for i in range(genome_size)]      
-            #genome = [[0, 0] for i in range(genome_size)]      
         else:
             raise ValueError('genome size is not defined')
 
@@ -112,4 +133,6 @@ if __name__ == "__main__":
         edges.append((i, 512))
         edges.append((i, 0))
  
-    main(im, edges, 2000000, genome_file_name='4551_22882864.gen', genome_size=1000)
+    main(im, edges, 2000000, 
+         #genome_file_name='4.gen',
+         genome_size=500)
